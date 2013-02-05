@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>Kill The Crazy Hamster</title>
+    <link href="stylesheets/screen.css" media="all" rel="stylesheet" type="text/css"/>
+    <script language="javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script><script language="javascript" src="javascripts/jquery.hotkeys.js" type="text/javascript"></script><script language="javascript" src="javascripts/key_status.js" type="text/javascript"></script><script language="javascript" src="javascripts/util.js" type="text/javascript"></script><script language="javascript" src="javascripts/sprite.js" type="text/javascript"></script><script language="javascript" src="javascripts/sound.js" type="text/javascript"></script>
+    
+  </head>
+  <body>
+    
+    <img src="images/background.png" id="background" />
+    <img src="images/bullet.png" id="bullet" />
+    <script type='text/javascript'>
+      //<![CDATA[
+        var CANVAS_WIDTH = 960;
+        var CANVAS_HEIGHT = 640;
+        var FPS = 30;
+                
+        enemies = [];
+        
+        function Enemy(I) {
+          I = I || {};
+        
+          I.active = true;
+          I.dead = false;
+          I.age = Math.floor(Math.random() * 128);
+          
+          I.color = "#A2B";
+        
+          I.y = CANVAS_HEIGHT / 2 + Math.random() * CANVAS_HEIGHT/ 2;
+          I.x = 0;
+          I.yVelocity = 0
+          I.xVelocity = 2;
+        
+          I.width = 64;
+          I.height = 64;
+        
+          I.inBounds = function() {
+            return I.x >= 0 && I.x <= CANVAS_WIDTH &&
+              I.y >= 0 && I.y <= CANVAS_HEIGHT;
+          };
+        
+          I.sprite = Sprite("hamster");
+        
+          I.draw = function() {
+            this.sprite.draw(canvas, this.x, this.y);
+          };
+        
+          I.update = function() {
+            I.x += I.xVelocity;
+            I.y += I.yVelocity;
+        
+            if (I.dead) {
+              I.xVelocity = 0; // 3 * Math.sin(I.age * Math.PI / 64);  
+              I.yVelocity = 5;
+            } else {
+              I.yVelocity = 3 * Math.sin(I.age * Math.PI / 64);
+            }
+            
+        
+            I.age++;
+        
+            I.active = I.active && I.inBounds();
+          };
+        
+          I.explode = function() {
+            Sound.play("explosion");
+        
+            // this.active = false;
+            this.dead = true;
+            console.log("hit!");
+            enemies.push(Enemy());
+            // enemies.push(Enemy());
+            I.sprite = Sprite("hamster-dead");
+          };
+        
+          return I;
+        };
+        
+        var canvasElement = $("<canvas width='" + CANVAS_WIDTH + 
+          "' height='" + CANVAS_HEIGHT + "'></canvas");
+        var canvas = canvasElement.get(0).getContext("2d");
+        canvasElement.appendTo('body');
+        mouseDown = 0;
+        mouseX = -10;
+        mouseY = -10;
+
+        document.body.onmousedown = function(e) { 
+            mouseDown = 1;
+            mouseX = e.pageX + 39;
+            mouseY = e.pageY + 37;
+            console.log("x = " + mouseX + " y = " + mouseY);            
+        }
+        document.body.onmouseup = function() {
+            mouseDown = 0;
+        }
+        
+        setInterval(function() {
+          update();
+          draw();
+        }, 1000/FPS);
+        
+        function update() {
+
+          if (mouseDown == 1) {            
+            enemies.forEach(function(enemy) {
+              if (isHit(enemy)) {  
+                console.log("dead");
+                enemy.explode();
+              }
+            });
+          }
+          
+          enemies.forEach(function(enemy) {
+            enemy.update();
+          });
+        
+          enemies = enemies.filter(function(enemy) {
+            return enemy.active;
+          });
+                
+          if (enemies.length == 0) {
+            console.log("new enemy");
+            enemies.push(Enemy());
+          }            
+        }
+        
+        function draw() {
+          // canvas.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+          var img = document.getElementById('background');
+          var bullet = document.getElementById('bullet');
+          canvas.drawImage(img, 0, 0 , CANVAS_WIDTH, CANVAS_HEIGHT);
+          // canvas.drawImage(bullet, mouseX, mouseY , 10, 10);
+                  
+          enemies.forEach(function(enemy) {
+            enemy.draw();
+          });
+        }
+
+        function isHit(enemy) {  
+          // console.log("enemy.x = " + enemy.x + " y = " + enemy.y);                  
+          return enemy.x < mouseX &&
+                 enemy.x + enemy.width > mouseX &&
+                 enemy.y < mouseY &&
+                 enemy.y + enemy.height > mouseY;
+        }
+        
+        function collides(a, b) {
+          return a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y;
+        }
+                
+      //]]>
+    </script>
+  </body>
+</html>

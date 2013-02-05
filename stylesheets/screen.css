@@ -1,0 +1,10 @@
+/* line 1 */
+body {
+  font-family: Verdana;
+  font-size: 10pt;
+  cursor: url(../images/crosshair.png), auto;
+}
+
+#background, #bullet {
+  display: none;
+}
